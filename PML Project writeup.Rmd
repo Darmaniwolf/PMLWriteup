@@ -1,0 +1,85 @@
+---
+title: 'PML Project: Write up'
+output: html_document
+---
+Initialize
+================
+First of all obtain libraries, open the files and set the seed:
+
+```{r}
+library(caret);
+mydataTrain = read.csv("d:/pml-training.csv");library(caret);mydataTest = read.csv("d:/pml-testing.csv");
+set.seed(32343)
+```
+
+Preprocess
+================
+Now we divide the income data into 10 parts, for training and cross validation:
+
+```{r}
+folds <- createFolds(y = mydataTrain$classe, k = 10, list = FALSE)
+training <- mydataTrain[folds != 10, ]
+test <- mydataTrain[folds == 10, ]
+```
+
+Building the model
+================
+
+We will take the column 9, 10 and 11 as predictor because as we have been observing, with these columns we obtain better results as predictor:
+
+```{r}
+trainingPredictor <- training[, c(9,10,11, 160)]
+trainingTestPredictor <- test[, c(9,10,11, 160)]
+testingPredictor <- mydataTest[, c(9,10,11, 160)]
+```
+
+Training
+================
+
+First we need to transform the "classe" column into a factor:
+
+```{r}
+trainingPredictor <- transform(trainingPredictor, classe = as.factor(classe))
+trainingTestPredictor <- transform(trainingTestPredictor, classe = as.factor(classe))
+```
+
+now, we train with the method "rpart":
+
+```{r}
+modelFit <- train(classe ~ ., method = "rpart", data = trainingPredictor)
+print(modelFit$finalModel)
+```
+
+Testing
+================
+
+```{r}
+prediction1 <- predict(modelFit, newdata = trainingPredictor)
+table(prediction1 == trainingPredictor$classe)
+table(prediction1 == trainingPredictor$classe)[2]/sum(table(prediction1 == trainingPredictor$classe))
+```
+
+Cross Validation
+================
+
+```{r}
+prediction2 <- predict(modelFit, newdata = trainingTestPredictor)
+table(prediction2 == trainingTestPredictor$classe)
+table(prediction2 == trainingTestPredictor$classe)[2]/sum(table(prediction2 == trainingTestPredictor$classe))
+```
+
+20 different cases prediction
+================
+
+```{r}
+prediction3 <- predict(modelFit, newdata = testingPredictor)
+table(prediction3)
+```
+
+Outcome
+
+```{r}
+prediction3
+```
+
+
